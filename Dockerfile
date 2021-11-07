@@ -1,16 +1,22 @@
 # Build Quix backend
 FROM ubuntu:20.04 as build
 
-ARG SBT_VERSION=1.4.1
+ARG SBT_VERSION=1.5.5
 
-RUN \
-  apt-get update && \
-  apt-get -y install curl \
-  default-jdk && \
-  curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb && \
-  dpkg -i sbt-$SBT_VERSION.deb && \
-  rm sbt-$SBT_VERSION.deb && \
-  apt-get install sbt && \
+RUN apt-get update && apt-get upgrade
+RUN apt-get -y install curl default-jdk
+
+#  curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb && \
+#  dpkg -i sbt-$SBT_VERSION.deb && \
+#  rm sbt-$SBT_VERSION.deb && \
+
+RUN apt-get install apt-transport-https curl gnupg -yqq
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list
+RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee /etc/apt/sources.list.d/sbt_old.list
+RUN curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
+RUN chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
+RUN apt-get update
+RUN apt-get install sbt -yqq && \
   sbt sbtVersion -Dsbt.rootdir=true;
 
 WORKDIR /quix-backend
